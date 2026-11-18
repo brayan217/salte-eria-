@@ -1,0 +1,88 @@
+/* ============================================================
+   PLANTILLA SALTEÑAS - HOJA DE ESTILOS
+   ============================================================ */
+
+:root{
+  --naranja: #E87722;
+  --negro: #1A1A1A;
+  --crema: #FDF0D5;
+  --gris: #2D2D2D;
+}
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body{
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background: var(--crema);
+  color: var(--negro);
+}
+
+/* ====== NAVEGACIÓN (BARRA ARRIBA) ====== */
+.nav{
+  background: var(--negro);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+  flex-wrap: wrap;
+}
+
+.brand{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--naranja);
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.brand .dot{
+  width: 34px;
+  height: 34px;
+  background: var(--naranja);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.menu{
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.menu a{
+  color: var(--crema);
+  padding: 14px 13px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.menu a:hover{
+  color: var(--naranja);
+  background: rgba(232, 119, 34, 0.1);
+}
+
+.userbox{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--crema);
+  font-size: 13px;
+}
+
+.badge{
+  background: var(--naranja);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+
