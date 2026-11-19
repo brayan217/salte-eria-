@@ -12,7 +12,7 @@ $ventas_hoy = mysqli_fetch_assoc(mysqli_query($conexion,
 $caja = mysqli_fetch_assoc(mysqli_query($conexion,
     "SELECT * FROM caja_turnos WHERE estado = 'abierto' LIMIT 1"));
 ?>
-<h1 class="pt">📊 Dashboard</h1>
+<h1 class="pt"> Dashboard</h1>
 
 <div class="grid">
     <div class="card oliva">
@@ -39,7 +39,7 @@ $caja = mysqli_fetch_assoc(mysqli_query($conexion,
 
 <div class="split">
     <div class="panel">
-        <div class="hd">🏆 Salteñas más vendidas hoy</div>
+        <div class="hd"> Salteñas más vendidas hoy</div>
         <?php
         $top = mysqli_query($conexion,
             "SELECT t.nombre, SUM(d.cantidad) AS unidades
@@ -62,7 +62,7 @@ $caja = mysqli_fetch_assoc(mysqli_query($conexion,
     </div>
 
     <div class="panel">
-        <div class="hd">🕑 Últimas ventas</div>
+        <div class="hd"> Últimas ventas</div>
         <?php
         $recientes = mysqli_query($conexion,
             "SELECT v.id_venta, v.fecha, v.total, v.metodo, u.nombre AS vendedor

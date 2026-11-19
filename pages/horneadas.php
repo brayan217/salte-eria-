@@ -25,7 +25,7 @@ $horneadas = mysqli_query($conexion,
      JOIN usuarios u ON u.id_usuario = h.id_usuario
      ORDER BY h.fecha_hornea DESC, h.id_horneada DESC");
 ?>
-<h1 class="pt">🔥 Registro de horneadas</h1>
+<h1 class="pt"> Registro de horneadas</h1>
 
 <div class="panel">
     <div class="hd">Nueva tanda de horneado</div>

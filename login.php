@@ -62,7 +62,7 @@ if ($_POST) {
 
 <div class="login-wrap">
     <div class="login-box">
-        <div class="logo">🥟</div>
+        <div class="logo"></div>
         <h1>EL SIN ACEITUNA</h1>
         <div class="sub">Salteñería · Sistema de Ventas</div>
 

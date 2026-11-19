@@ -128,7 +128,7 @@ $pendientes = mysqli_query($conexion,
 <body>
 
 <main class="contenido">
-    <h1>💰 Punto de venta - Mostrador</h1>
+    <h1> Punto de venta - Mostrador</h1>
 
     <?php if (!$caja): ?>
         <div class="alerta danger">⚠ No hay caja abierta. Abra la caja antes de vender.</div>
@@ -142,7 +142,7 @@ $pendientes = mysqli_query($conexion,
     <!-- Pedidos de meseros esperando cobro -->
     <?php if (mysqli_num_rows($pendientes) > 0): ?>
     <div class="card">
-        <h2>🔔 Pedidos de meseros esperando cobro</h2>
+        <h2> Pedidos de meseros esperando cobro</h2>
         <table class="tabla">
             <thead>
                 <tr>
@@ -259,7 +259,7 @@ $pendientes = mysqli_query($conexion,
 
             <div class="acciones-form">
                 <button type="submit" name="cobrar" class="btn btn-naranja" <?= (empty($items_carrito) || !$caja) ? 'disabled' : '' ?>>
-                    ✅ Cobrar venta
+                     Cobrar venta
                 </button>
                 <?php if (!empty($items_carrito)): ?>
                     <a href="index.php?p=pos&action=clear" class="btn btn-rojo">Vaciar carrito</a>

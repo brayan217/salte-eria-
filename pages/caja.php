@@ -67,11 +67,11 @@ $historial = mysqli_query($conexion,
      JOIN usuarios u ON u.id_usuario = c.id_usuario_apertura
      ORDER BY c.id_turno DESC");
 ?>
-<h1 class="pt">🧾 Apertura y cierre de caja</h1>
+<h1 class="pt">Apertura y cierre de caja</h1>
 
 <?php if (!$caja): ?>
 <div class="panel">
-    <div class="hd">🔓 Abrir caja</div>
+    <div class="hd"> Abrir caja</div>
     <form method="POST" action="index.php?p=caja" class="form-inline">
         <div>
             <label>Monto inicial para cambio (Bs)</label>
@@ -103,7 +103,7 @@ $historial = mysqli_query($conexion,
 </div>
 
 <div class="panel">
-    <div class="hd">🔒 Cerrar caja</div>
+    <div class="hd"> Cerrar caja</div>
     <form method="POST" action="index.php?p=caja" class="form-inline">
         <div>
             <label>Efectivo contado en el cajón (Bs)</label>

@@ -20,7 +20,7 @@ $ticket_promedio = $resumen['total_ventas'] > 0 ? $resumen['monto_total'] / $res
 $total_mermas = mysqli_fetch_assoc(mysqli_query($conexion,
     "SELECT COALESCE(SUM(cantidad),0) AS total FROM mermas WHERE DATE(fecha) = '$hoy'"));
 ?>
-<h1 class="pt">📈 Reportes</h1>
+<h1 class="pt"> Reportes</h1>
 
 <div class="grid">
     <div class="card dorado">
@@ -75,7 +75,7 @@ $total_mermas = mysqli_fetch_assoc(mysqli_query($conexion,
     </div>
 
     <div class="panel">
-        <div class="hd">🏆 Salteñas más vendidas (ranking)</div>
+        <div class="hd"> Salteñas más vendidas (ranking)</div>
         <?php
         $ranking = mysqli_query($conexion,
             "SELECT t.nombre, SUM(d.cantidad) AS unidades, SUM(d.subtotal) AS ingresos

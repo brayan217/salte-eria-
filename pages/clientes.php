@@ -75,7 +75,7 @@ if (isset($_GET['editar'])) {
 // Listar clientes
 $clientes = mysqli_query($conexion, "SELECT * FROM clientes ORDER BY nombre");
 ?>
-<h1 class="pt">🏪 Clientes</h1>
+<h1 class="pt"> Clientes</h1>
 
 <?php $fl = obtener_flash(); if ($fl): ?>
     <div class="alert <?= $fl['t'] ?>"><?= h($fl['m']) ?></div>

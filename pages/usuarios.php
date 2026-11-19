@@ -122,7 +122,7 @@ if ($rol === 'Administrador') {
 <?php if ($rol === 'Administrador'): ?>
 <!-- Administrador: puede registrar, modificar y eliminar -->
 <div class="panel">
-    <div class="hd">➕ Nuevo usuario</div>
+    <div class="hd"> Nuevo usuario</div>
     <form method="POST" action="index.php?p=usuarios" class="form-inline">
         <?php if ($usuario_editar): ?>
             <input type="hidden" name="id" value="<?= $usuario_editar['id_usuario'] ?>">
@@ -200,7 +200,7 @@ if ($rol === 'Administrador') {
 <?php elseif ($rol === 'Gerente'): ?>
 <!-- Gerente: solo puede registrar Cocinero, Cajero, Mesero -->
 <div class="panel">
-    <div class="hd">➕ Registrar personal (solo Cocinero, Cajero, Mesero)</div>
+    <div class="hd">Registrar personal (solo Cocinero, Cajero, Mesero)</div>
     <form method="POST" action="index.php?p=usuarios" class="form-inline">
         <div>
             <label>Nombre completo</label>

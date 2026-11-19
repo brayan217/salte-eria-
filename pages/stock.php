@@ -37,12 +37,12 @@ $mermas = mysqli_query($conexion,
      WHERE DATE(m.fecha) = '$hoy'
      ORDER BY m.fecha DESC");
 ?>
-<h1 class="pt">📦 Salteñas y merma</h1>
+<h1 class="pt"> Salteñas y merma</h1>
 
 <div class="tiles">
     <?php while ($s = mysqli_fetch_assoc($saltenas)): ?>
         <div class="tile">
-            <div class="em">🥟</div>
+            <div class="em"></div>
             <div class="nm"><?= h($s['nombre']) ?></div>
             <div class="pr">Bs <?= money($s['precio']) ?></div>
             <div class="st"><?= h($s['categoria']) ?></div>

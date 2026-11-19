@@ -14,15 +14,15 @@ $nombre = $_SESSION['nombre'] ?? '';
 
 // Menú por rol: [icono, etiqueta, roles_permitidos]
 $MENU = [
-    'dashboard' => ['📊', 'Dashboard', ['Gerente','Administrador','Cajero','Cocinero','Mesero']],
-    'stock'     => ['📦', 'Stock', ['Gerente','Administrador','Cajero','Cocinero','Mesero']],
-    'horneadas' => ['🔥', 'Horneadas', ['Gerente','Administrador','Cajero','Cocinero']],
-    'pedidos'   => ['📝', 'Pedidos', ['Gerente','Administrador','Cajero','Mesero']],
-    'pos'       => ['💰', 'POS / Caja', ['Gerente','Administrador','Cajero']],
-    'caja'      => ['🧾', 'Cierre de Caja', ['Gerente','Administrador','Cajero']],
-    'reportes'  => ['📈', 'Reportes', ['Gerente','Administrador']],
-    'usuarios'  => ['👥', 'Usuarios', ['Gerente','Administrador']],
-    'clientes'  => ['🏪', 'Clientes', ['Gerente','Administrador','Cajero']],
+    'dashboard' => ['', 'Dashboard', ['Gerente','Administrador','Cajero','Cocinero','Mesero']],
+    'stock'     => ['', 'Stock', ['Gerente','Administrador','Cajero','Cocinero','Mesero']],
+    'horneadas' => ['', 'Horneadas', ['Gerente','Administrador','Cajero','Cocinero']],
+    'pedidos'   => ['', 'Pedidos', ['Gerente','Administrador','Cajero','Mesero']],
+    'pos'       => ['', 'POS / Caja', ['Gerente','Administrador','Cajero']],
+    'caja'      => ['', 'Cierre de Caja', ['Gerente','Administrador','Cajero']],
+    'reportes'  => ['', 'Reportes', ['Gerente','Administrador']],
+    'usuarios'  => ['', 'Usuarios', ['Gerente','Administrador']],
+    'clientes'  => ['', 'Clientes', ['Gerente','Administrador','Cajero']],
 ];
 
 $pagina = $_GET['p'] ?? 'dashboard';
@@ -53,7 +53,7 @@ $flash = obtener_flash();
 <!-- BARRA DE NAVEGACIÓN -->
 <nav class="nav">
     <div class="brand">
-        <span class="dot">🥟</span> EL SIN ACEITUNA
+        <span class="dot"></span> EL SIN ACEITUNA
     </div>
     <div class="menu">
         <?php foreach ($MENU as $clave => $datos): [$icono, $etiqueta, $roles] = $datos; ?>
@@ -84,6 +84,7 @@ $flash = obtener_flash();
         case 'reportes':  include 'pages/reportes.php'; break;
         case 'usuarios':  include 'pages/usuarios.php'; break;
         case 'clientes':  include 'pages/clientes.php'; break;
+        case 'pedido_editar': include 'pages/pedido_editar.php'; break;
         default:          include 'pages/dashboard.php'; break;
     endswitch;
     ?>
