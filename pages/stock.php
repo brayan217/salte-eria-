@@ -19,9 +19,15 @@ if ($_POST && isset($_POST['registrar_merma'])) {
     exit();
 }
 
-// Listar salteñas
+// Listar salteñas con stock calculado (horneadas − vendidas − mermas)
 $saltenas = mysqli_query($conexion,
-    "SELECT t.id_saltena, t.nombre, t.precio, c.nombre AS categoria
+    "SELECT t.id_saltena, t.nombre, t.precio, c.nombre AS categoria,
+            (COALESCE((SELECT SUM(h.cantidad) FROM horneadas h WHERE h.id_saltena = t.id_saltena),0)
+             - COALESCE((SELECT SUM(d.cantidad) FROM detalle_ventas d
+                         JOIN ventas v ON v.id_venta = d.id_venta
+                         WHERE d.id_saltena = t.id_saltena AND v.estado = 'pagada'),0)
+             - COALESCE((SELECT SUM(m.cantidad) FROM mermas m WHERE m.id_saltena = t.id_saltena),0)
+            ) AS stock_disponible
      FROM tipos_saltena t
      JOIN categorias_saltena c ON c.id_categoria = t.id_categoria
      WHERE t.estado = 'activo'
@@ -41,8 +47,11 @@ $mermas = mysqli_query($conexion,
 
 <div class="tiles">
     <?php while ($s = mysqli_fetch_assoc($saltenas)): ?>
-        <div class="tile">
-            <div class="em"></div>
+        <div class="tile <?= (int)$s['stock_disponible'] <= 0 ? 'zero' : '' ?>">
+            <div class="em" style="font-size:26px; font-weight:800; color:<?= (int)$s['stock_disponible'] <= 0 ? 'var(--rojo)' : 'var(--naranja)' ?>;">
+                <?= (int)$s['stock_disponible'] ?>
+            </div>
+            <div class="st" style="font-weight:700;">unidades disponibles</div>
             <div class="nm"><?= h($s['nombre']) ?></div>
             <div class="pr">Bs <?= money($s['precio']) ?></div>
             <div class="st"><?= h($s['categoria']) ?></div>
