@@ -1,38 +1,95 @@
+<?php
+// Página principal - Dashboard y despachador de secciones
+session_start();
+require_once 'conexion.php';
+require_once 'funciones.php';
+
+// Si no hay sesión, ir al login
+if (!isset($_SESSION['id_usuario'])) {
+    redirigir('login.php');
+}
+
+$rol = $_SESSION['rol'] ?? '';
+$nombre = $_SESSION['nombre'] ?? '';
+
+// Menú por rol: [icono, etiqueta, roles_permitidos]
+$MENU = [
+    'dashboard' => ['📊', 'Dashboard', ['Gerente','Administrador','Cajero','Cocinero','Mesero']],
+    'stock'     => ['📦', 'Stock', ['Gerente','Administrador','Cajero','Cocinero','Mesero']],
+    'horneadas' => ['🔥', 'Horneadas', ['Gerente','Administrador','Cajero','Cocinero']],
+    'pedidos'   => ['📝', 'Pedidos', ['Gerente','Administrador','Cajero','Mesero']],
+    'pos'       => ['💰', 'POS / Caja', ['Gerente','Administrador','Cajero']],
+    'caja'      => ['🧾', 'Cierre de Caja', ['Gerente','Administrador','Cajero']],
+    'reportes'  => ['📈', 'Reportes', ['Gerente','Administrador']],
+    'usuarios'  => ['👥', 'Usuarios', ['Gerente','Administrador']],
+    'clientes'  => ['🏪', 'Clientes', ['Gerente','Administrador','Cajero']],
+];
+
+$pagina = $_GET['p'] ?? 'dashboard';
+
+// Si la página solicitada no existe o no tiene permiso, ir al dashboard
+if (!isset($MENU[$pagina]) || !tiene_rol($MENU[$pagina][2])) {
+    $pagina = 'dashboard';
+}
+
+$flash = obtener_flash();
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Plantilla Salteñas</title>
+    <title>El Sin Aceituna - <?= h($pagina) ?></title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<!-- ============================================================
-     NAVEGACIÓN (ARRIBA) - ESTA ES LA PARTE QUE COMPARTEN
-     Los compañeros solo agregan su código debajo de esta barra
-     ============================================================ -->
+<?php $fl = obtener_flash(); if ($fl): ?>
+    <div class="wrap">
+        <div class="alert <?= $fl['t'] ?>"><?= h($fl['m']) ?></div>
+    </div>
+<?php endif; ?>
+
+<!-- BARRA DE NAVEGACIÓN -->
 <nav class="nav">
     <div class="brand">
-        <span class="dot">🥟</span>
-        EL SIN ACEITUNA
+        <span class="dot">🥟</span> EL SIN ACEITUNA
     </div>
-
     <div class="menu">
-        <!-- Cada botón es un enlace -->
-        <a href="?p=ventas">📄 Ventas</a>
-        <a href="?p=reportes">📊 Reportes</a>
-        <a href="?p=clientes">👥 Clientes</a>
-        <a href="?p=usuarios">👤 Usuarios</a>
+        <?php foreach ($MENU as $clave => $datos): [$icono, $etiqueta, $roles] = $datos; ?>
+            <?php if (tiene_rol($roles)): ?>
+                <a href="index.php?p=<?= h($clave) ?>" class="<?= $pagina === $clave ? 'on' : '' ?>">
+                    <?= h($icono) ?> <?= h($etiqueta) ?>
+                </a>
+            <?php endif; ?>
+        <?php endforeach; ?>
     </div>
-
     <div class="userbox">
-        <span class="badge">Usuario</span>
-        <span>Nombre del Usuario</span>
-        <span>|</span>
-        <a href="?action=logout">Salir</a>
+        <span class="badge"><?= h($rol) ?></span>
+        <span><?= h($nombre) ?></span>
+        <a href="logout.php" class="btn r sm">Salir</a>
     </div>
 </nav>
+
+<!-- CONTENIDO -->
+<div class="wrap">
+    <?php
+    switch ($pagina):
+        case 'dashboard': include 'pages/dashboard.php'; break;
+        case 'stock':     include 'pages/stock.php'; break;
+        case 'horneadas': include 'pages/horneadas.php'; break;
+        case 'pedidos':   include 'pages/pedidos.php'; break;
+        case 'pos':       include 'pages/pos.php'; break;
+        case 'caja':      include 'pages/caja.php'; break;
+        case 'reportes':  include 'pages/reportes.php'; break;
+        case 'usuarios':  include 'pages/usuarios.php'; break;
+        case 'clientes':  include 'pages/clientes.php'; break;
+        default:          include 'pages/dashboard.php'; break;
+    endswitch;
+    ?>
+</div>
+
+<footer>© 2026 Salteñería "El Sin Aceituna" · Sistema de Ventas · <a href="logout.php">Cerrar sesión</a></footer>
 
 </body>
 </html>
