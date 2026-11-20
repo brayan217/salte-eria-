@@ -38,19 +38,20 @@ if ($_POST && isset($_POST['registrar_pedido'])) {
 // Productos disponibles
 $productos = mysqli_query($conexion, "SELECT id_saltena, nombre, precio FROM tipos_saltena WHERE estado = 'activo' ORDER BY nombre");
 
-// Pedidos pendientes
+// Pedidos: el mesero ve TODOS los suyos (para ver deshabilitados los ya cobrados);
+// cajero/admin/gerente solo ven los pendientes de cobrar.
 if ($rol === 'Mesero') {
     $pendientes = mysqli_query($conexion,
-        "SELECT v.id_venta, v.fecha, v.total, t.nombre AS saltena, d.cantidad, u.nombre AS mesero
+        "SELECT v.id_venta, v.fecha, v.total, v.estado, t.nombre AS saltena, d.cantidad, u.nombre AS mesero
          FROM ventas v
          JOIN detalle_ventas d ON d.id_venta = v.id_venta
          JOIN tipos_saltena t ON t.id_saltena = d.id_saltena
          JOIN usuarios u ON u.id_usuario = v.id_usuario
-         WHERE v.estado = 'pendiente' AND v.id_usuario = $id_usuario
+         WHERE v.id_usuario = $id_usuario
          ORDER BY v.fecha DESC");
 } else {
     $pendientes = mysqli_query($conexion,
-        "SELECT v.id_venta, v.fecha, v.total, t.nombre AS saltena, d.cantidad, u.nombre AS mesero
+        "SELECT v.id_venta, v.fecha, v.total, v.estado, t.nombre AS saltena, d.cantidad, u.nombre AS mesero
          FROM ventas v
          JOIN detalle_ventas d ON d.id_venta = v.id_venta
          JOIN tipos_saltena t ON t.id_saltena = d.id_saltena
@@ -77,7 +78,8 @@ if ($rol === 'Mesero') {
     <?php endif; ?>
 </div>
 
-<div class="split">
+<!-- Para el mesero se apilan verticalmente (Nuevo pedido arriba, Mis pedidos abajo) -->
+<div class="<?= $rol === 'Mesero' ? '' : 'split' ?>">
     <div class="panel">
         <div class="hd">Nuevo pedido</div>
         <form method="POST" action="index.php?p=pedidos" class="form-inline">
@@ -117,22 +119,37 @@ if ($rol === 'Mesero') {
                 <th>Salteña × Cant</th>
                 <th>Total</th>
                 <th>Hora</th>
+                <th>Estado</th>
                 <th>Acciones</th>
             </tr>
             <?php while ($pd = mysqli_fetch_assoc($pendientes)): ?>
+                <?php
+                $estado_pd   = $pd['estado'];
+                $color_estado = $estado_pd === 'pagada' ? 'var(--oliva)'
+                              : ($estado_pd === 'anulada' ? 'var(--rojo)' : 'var(--naranja)');
+                $bloqueado   = ($estado_pd !== 'pendiente'); // ya cobrado o anulado
+                ?>
                 <tr>
                     <td><?= $pd['id_venta'] ?></td>
                     <td><?= h($pd['mesero']) ?></td>
                     <td><?= h($pd['saltena']) ?> × <?= (int)$pd['cantidad'] ?></td>
                     <td><b>Bs <?= money($pd['total']) ?></b></td>
                     <td><?= date('H:i', strtotime($pd['fecha'])) ?></td>
+                    <td><span class="pill" style="background:<?= $color_estado ?>"><?= h($estado_pd) ?></span></td>
                     <td style="white-space:nowrap">
                         <?php if ($rol === 'Mesero'): ?>
-                            <a href="index.php?p=pedido_editar&id=<?= $pd['id_venta'] ?>" class="btn btn-naranja sm">Editar</a>
-                            <a href="index.php?p=pedido_editar&id=<?= $pd['id_venta'] ?>&anular=1" class="btn btn-rojo sm">Anular</a>
-                        <?php else: ?>
+                            <?php if ($bloqueado): ?>
+                                <span class="btn g sm" style="opacity:0.45;cursor:not-allowed" title="El pedido ya fue cobrado o anulado">Editar</span>
+                                <span class="btn g sm" style="opacity:0.45;cursor:not-allowed" title="El pedido ya fue cobrado o anulado">Anular</span>
+                            <?php else: ?>
+                                <a href="index.php?p=pedido_editar&id=<?= $pd['id_venta'] ?>" class="btn btn-naranja sm">Editar</a>
+                                <a href="index.php?p=pedido_editar&id=<?= $pd['id_venta'] ?>&anular=1" class="btn btn-rojo sm">Anular</a>
+                            <?php endif; ?>
+                        <?php elseif (!$bloqueado): ?>
                             <a href="index.php?p=pos&action=cobrar_pendiente&id=<?= $pd['id_venta'] ?>&metodo=efectivo" class="btn btn-naranja sm">Efectivo</a>
                             <a href="index.php?p=pos&action=cobrar_pendiente&id=<?= $pd['id_venta'] ?>&metodo=qr" class="btn btn-naranja sm">QR</a>
+                        <?php else: ?>
+                            <span style="color:#999">—</span>
                         <?php endif; ?>
                     </td>
                 </tr>

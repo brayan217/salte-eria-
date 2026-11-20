@@ -47,7 +47,8 @@ $total_mermas = mysqli_fetch_assoc(mysqli_query($conexion,
         <div class="hd">Detalle de ventas</div>
         <?php
         $ventas = mysqli_query($conexion,
-            "SELECT v.id_venta, v.fecha, v.total, v.metodo,
+            "SELECT v.id_venta, v.fecha, v.total,
+                    (SELECT p.metodo FROM ventas_pagos p WHERE p.id_venta = v.id_venta LIMIT 1) AS metodo,
                     c.nombre AS cliente_nombre, c.apellido_p AS cliente_apellido,
                     u.nombre AS vendedor
              FROM ventas v

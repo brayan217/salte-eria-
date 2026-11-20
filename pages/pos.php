@@ -44,6 +44,40 @@ if (isset($_GET['action']) && $_GET['action'] === 'clear') {
     exit();
 }
 
+// Cobrar pedido pendiente de mesero
+if (isset($_GET['action']) && $_GET['action'] === 'cobrar_pendiente' && $caja) {
+    $id_venta = (int)($_GET['id'] ?? 0);
+    $metodo   = $_GET['metodo'] ?? 'efectivo';
+
+    if (!in_array($metodo, ['efectivo', 'qr'], true)) {
+        $metodo = 'efectivo';
+    }
+
+    // Validar que el pedido exista y siga pendiente
+    $venta = mysqli_fetch_assoc(mysqli_query($conexion,
+        "SELECT id_venta, total FROM ventas WHERE id_venta = $id_venta AND estado = 'pendiente' LIMIT 1"));
+
+    if ($venta) {
+        $total = (float)$venta['total'];
+
+        // Marcar como pagada y guardar el método de pago (aquí se descuenta el stock
+        // porque la vista de stock resta las ventas en estado 'pagada')
+        mysqli_query($conexion,
+            "UPDATE ventas SET estado = 'pagada' WHERE id_venta = $id_venta");
+
+        // Registrar el pago para que aparezca en el corte de caja
+        mysqli_query($conexion,
+            "INSERT INTO ventas_pagos (id_venta, metodo, monto) VALUES ($id_venta, '$metodo', $total)");
+
+        flash("Pedido #$id_venta cobrado ($metodo) — Bs " . money($total) . ". El stock ya se había descontado al tomar el pedido.", 'success');
+    } else {
+        flash("No se encontró el pedido o ya fue cobrado", 'danger');
+    }
+
+    header("Location: index.php?p=pos");
+    exit();
+}
+
 // Cobrar venta
 if ($_POST && isset($_POST['cobrar'])) {
     if (!$caja) {
@@ -65,8 +99,8 @@ if ($_POST && isset($_POST['cobrar'])) {
             flash("El pago no cuadra con el total (Bs " . money($total) . ")", 'danger');
         } else {
             // Registrar venta con el USUARIO LOGUEADO automáticamente
-            mysqli_query($conexion, "INSERT INTO ventas (id_turno, id_usuario, id_cliente, fecha, total, metodo, estado) 
-                VALUES (" . $caja['id_turno'] . ", $id_usuario, NULL, NOW(), $total, '$metodo', 'pagada')");
+            mysqli_query($conexion, "INSERT INTO ventas (id_turno, id_usuario, id_cliente, fecha, total, estado) 
+                VALUES (" . $caja['id_turno'] . ", $id_usuario, NULL, NOW(), $total, 'pagada')");
             $id_venta = mysqli_insert_id($conexion);
 
             foreach ($_SESSION['cart'] as $id_saltena => $cantidad) {
@@ -248,12 +282,13 @@ $pendientes = mysqli_query($conexion,
                 </div>
 
                 <div>
-                    <label>Método de pago</label>
-                    <select name="metodo_pago" id="metodo_pago">
-                        <option value="efectivo">Efectivo</option>
-                        <option value="qr">QR</option>
-                        <option value="mixto">Mixto</option>
-                    </select>
+                    <label>Efectivo (Bs)</label>
+                    <input type="number" name="efectivo" step="0.01" min="0" value="<?= number_format($total_carrito, 2) ?>">
+                </div>
+
+                <div>
+                    <label>QR (Bs)</label>
+                    <input type="number" name="qr" step="0.01" min="0" value="0">
                 </div>
             </div>
 

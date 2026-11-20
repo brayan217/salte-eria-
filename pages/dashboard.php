@@ -65,7 +65,9 @@ $caja = mysqli_fetch_assoc(mysqli_query($conexion,
         <div class="hd"> Últimas ventas</div>
         <?php
         $recientes = mysqli_query($conexion,
-            "SELECT v.id_venta, v.fecha, v.total, v.metodo, u.nombre AS vendedor
+            "SELECT v.id_venta, v.fecha, v.total,
+                    (SELECT p.metodo FROM ventas_pagos p WHERE p.id_venta = v.id_venta LIMIT 1) AS metodo,
+                    u.nombre AS vendedor
              FROM ventas v
              JOIN usuarios u ON u.id_usuario = v.id_usuario
              WHERE v.estado = 'pagada'
