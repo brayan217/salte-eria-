@@ -152,6 +152,13 @@ a{
 .alert.warning{ background: #FFF3E0; color: #E65100; border-left: 4px solid var(--naranja); }
 .alert.info{ background: #E3F2FD; color: #0D47A1; border-left: 4px solid #1976D2; }
 
+/* Mensaje flash flotando al lado del título de cada página (no mueve el navbar) */
+.flash-inline{
+  float: right;
+  margin-bottom: 0;
+  max-width: 55%;
+}
+
 /* ===== NAVEGACIÓN ===== */
 .nav{
   background: var(--negro);

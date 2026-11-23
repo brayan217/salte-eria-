@@ -56,12 +56,6 @@ if (isset($MENU[$pagina])) {
 </head>
 <body>
 
-<?php $flash = obtener_flash(); if ($flash): ?>
-    <div class="wrap">
-        <div class="alert <?= $flash['t'] ?>"><?= h($flash['m']) ?></div>
-    </div>
-<?php endif; ?>
-
 <!-- BARRA DE NAVEGACIÓN -->
 <nav class="nav">
     <div class="brand">
@@ -85,6 +79,10 @@ if (isset($MENU[$pagina])) {
 
 <!-- CONTENIDO -->
 <div class="wrap">
+    <!-- Mensaje flash flotando al lado del título de la página (no empuja el navbar) -->
+    <?php $flash = obtener_flash(); if ($flash): ?>
+        <div class="alert <?= $flash['t'] ?> flash-inline"><?= h($flash['m']) ?></div>
+    <?php endif; ?>
     <?php
     switch ($pagina):
         case 'dashboard':     include 'pages/dashboard.php'; break;

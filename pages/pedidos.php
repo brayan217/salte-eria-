@@ -18,14 +18,22 @@ if ($_POST && isset($_POST['registrar_pedido']) && $rol !== 'Administrador') {
         $mesa       = mysqli_real_escape_string($conexion, $_POST['mesa'] ?? '');
 
         if ($id_saltena > 0 && $cantidad > 0 && $mesa !== '') {
-            $prod = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT precio FROM tipos_saltena WHERE id_saltena = $id_saltena"));
+            $prod = mysqli_fetch_assoc(mysqli_query($conexion,
+                "SELECT t.precio, COALESCE(v.stock_disponible,0) AS stock
+                 FROM tipos_saltena t
+                 LEFT JOIN v_stock_hoy v ON v.id_saltena = t.id_saltena
+                 WHERE t.id_saltena = $id_saltena"));
             if ($prod) {
-                $total = (float)$prod['precio'] * (float)$cantidad;
-                // Guardar con el id_turno de la caja abierta
-                mysqli_query($conexion, "INSERT INTO ventas (id_turno, id_usuario, id_cliente, fecha, total, estado) VALUES (" . $caja['id_turno'] . ", $id_usuario, NULL, NOW(), $total, 'pendiente')");
-                $id_venta = mysqli_insert_id($conexion);
-                mysqli_query($conexion, "INSERT INTO detalle_ventas (id_venta, id_saltena, cantidad, precio_unitario, subtotal) VALUES ($id_venta, $id_saltena, $cantidad, " . (float)$prod['precio'] . ", $total)");
-                flash("Pedido enviado a caja ✔", 'success');
+                if ($cantidad > (int)$prod['stock']) {
+                    flash("Stock insuficiente. Quedan " . (int)$prod['stock'] . " unidad(es).", 'danger');
+                } else {
+                    $total = (float)$prod['precio'] * (float)$cantidad;
+                    // Guardar con el id_turno de la caja abierta
+                    mysqli_query($conexion, "INSERT INTO ventas (id_turno, id_usuario, id_cliente, fecha, total, estado) VALUES (" . $caja['id_turno'] . ", $id_usuario, NULL, NOW(), $total, 'pendiente')");
+                    $id_venta = mysqli_insert_id($conexion);
+                    mysqli_query($conexion, "INSERT INTO detalle_ventas (id_venta, id_saltena, cantidad, precio_unitario, subtotal) VALUES ($id_venta, $id_saltena, $cantidad, " . (float)$prod['precio'] . ", $total)");
+                    flash("Pedido enviado a caja ✔", 'success');
+                }
             }
         } else {
             flash("Datos inválidos", 'danger');
@@ -35,8 +43,13 @@ if ($_POST && isset($_POST['registrar_pedido']) && $rol !== 'Administrador') {
     exit();
 }
 
-// Productos disponibles
-$productos = mysqli_query($conexion, "SELECT id_saltena, nombre, precio FROM tipos_saltena WHERE estado = 'activo' ORDER BY nombre");
+// Productos disponibles con stock actual (de la vista oficial v_stock_hoy)
+$productos = mysqli_query($conexion,
+    "SELECT t.id_saltena, t.nombre, t.precio, COALESCE(v.stock_disponible,0) AS stock
+     FROM tipos_saltena t
+     LEFT JOIN v_stock_hoy v ON v.id_saltena = t.id_saltena
+     WHERE t.estado = 'activo'
+     ORDER BY t.nombre");
 
 // Consultas según el rol:
 // - Administrador: ve el listado de pedidos enviados por los meseros
@@ -140,7 +153,9 @@ if ($rol === 'Administrador') {
                     <select name="id_saltena" required <?= !$caja ? 'disabled' : '' ?>>
                         <option value="">Seleccione</option>
                         <?php while ($p = mysqli_fetch_assoc($productos)): ?>
-                            <option value="<?= $p['id_saltena'] ?>"><?= h($p['nombre']) ?> - Bs <?= money($p['precio']) ?></option>
+                            <option value="<?= $p['id_saltena'] ?>" <?= (int)$p['stock'] <= 0 ? 'disabled' : '' ?>>
+                                <?= h($p['nombre']) ?> - Bs <?= money($p['precio']) ?> (Quedan: <?= (int)$p['stock'] ?>)
+                            </option>
                         <?php endwhile; ?>
                     </select>
                 </div>
