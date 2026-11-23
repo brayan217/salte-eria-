@@ -12,16 +12,26 @@ $caja = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT id_turno FROM caja_tu
 // Inicializar carrito en sesión
 if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
 
-// Agregar al carrito
+// Agregar al carrito (respetando la cantidad indicada y validando stock)
 if (isset($_GET['action']) && $_GET['action'] === 'add' && $caja) {
     $id_saltena = (int)($_GET['sal'] ?? 0);
+    $cantidad   = (int)($_GET['cantidad'] ?? 1);
+    if ($cantidad < 1) $cantidad = 1;
+
     if ($id_saltena > 0) {
-        $p = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT nombre, precio FROM tipos_saltena WHERE id_saltena = $id_saltena"));
+        $p = mysqli_fetch_assoc(mysqli_query($conexion,
+            "SELECT t.nombre, COALESCE(v.stock_disponible,0) AS stock
+             FROM tipos_saltena t
+             LEFT JOIN v_stock_hoy v ON v.id_saltena = t.id_saltena
+             WHERE t.id_saltena = $id_saltena"));
         if ($p) {
-            if (isset($_SESSION['cart'][$id_saltena])) {
-                $_SESSION['cart'][$id_saltena]++;
+            $ya     = (int)($_SESSION['cart'][$id_saltena] ?? 0);
+            $nueva  = $ya + $cantidad;
+            $stock  = (int)$p['stock'];
+            if ($nueva > $stock) {
+                flash("Stock insuficiente de " . $p['nombre'] . ". Quedan $stock unidad(es).", 'danger');
             } else {
-                $_SESSION['cart'][$id_saltena] = 1;
+                $_SESSION['cart'][$id_saltena] = $nueva;
             }
         }
     }
@@ -214,13 +224,18 @@ $pendientes = mysqli_query($conexion,
                 <select name="sal" required>
                     <option value="">Seleccione un producto</option>
                     <?php
-                    $menu = mysqli_query($conexion, "SELECT id_saltena, nombre, precio FROM tipos_saltena WHERE estado = 'activo' ORDER BY nombre");
+                    $menu = mysqli_query($conexion,
+                        "SELECT t.id_saltena, t.nombre, t.precio, COALESCE(v.stock_disponible,0) AS stock
+                         FROM tipos_saltena t
+                         LEFT JOIN v_stock_hoy v ON v.id_saltena = t.id_saltena
+                         WHERE t.estado = 'activo'
+                         ORDER BY t.nombre");
                     while ($m = mysqli_fetch_assoc($menu)):
-                        $en_carrito = $_SESSION['cart'][$m['id_saltena']] ?? 0;
-                        $clase = (!$caja) ? 'disabled' : '';
+                        $stock_actual = (int)$m['stock'];
+                        $clase = (!$caja || $stock_actual <= 0) ? 'disabled' : '';
                     ?>
                         <option value="<?= $m['id_saltena'] ?>" <?= $clase ?>>
-                            <?= h($m['nombre']) ?> - Bs <?= money($m['precio']) ?>
+                            <?= h($m['nombre']) ?> - Bs <?= money($m['precio']) ?> (Quedan: <?= $stock_actual ?>)
                         </option>
                     <?php endwhile; ?>
                 </select>

@@ -58,6 +58,21 @@ if ($_POST && isset($_POST['cerrar_caja'])) {
 
 $caja = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT * FROM caja_turnos WHERE estado = 'abierto' LIMIT 1"));
 
+// Efectivo y QR REALES del turno abierto (en vivo, desde ventas_pagos).
+// total_efectivo/total_qr de caja_turnos solo se llenan al CERRAR, por eso se calculan aparte.
+$efectivo_ventas_actual = 0;
+$qr_ventas_actual       = 0;
+if ($caja) {
+    $res_actual = mysqli_fetch_assoc(mysqli_query($conexion,
+        "SELECT COALESCE(SUM(CASE WHEN p.metodo = 'efectivo' THEN p.monto END),0) AS efectivo,
+                COALESCE(SUM(CASE WHEN p.metodo = 'qr' THEN p.monto END),0) AS qr
+         FROM ventas v
+         JOIN ventas_pagos p ON p.id_venta = v.id_venta
+         WHERE v.id_turno = " . (int)$caja['id_turno'] . " AND v.estado = 'pagada'"));
+    $efectivo_ventas_actual = (float)($res_actual['efectivo'] ?? 0);
+    $qr_ventas_actual       = (float)($res_actual['qr'] ?? 0);
+}
+
 // Historial de turnos
 $historial = mysqli_query($conexion,
     "SELECT c.id_turno, c.fecha_apertura, c.fecha_cierre, c.monto_inicial,
@@ -89,15 +104,15 @@ $historial = mysqli_query($conexion,
     </div>
     <div class="card dorado">
         <h3>Efectivo en ventas</h3>
-        <div class="v">Bs <?= money((float)($caja['total_efectivo'] ?? 0)) ?></div>
+        <div class="v">Bs <?= money($efectivo_ventas_actual) ?></div>
     </div>
     <div class="card oliva">
         <h3>QR en ventas</h3>
-        <div class="v">Bs <?= money((float)($caja['total_qr'] ?? 0)) ?></div>
+        <div class="v">Bs <?= money($qr_ventas_actual) ?></div>
     </div>
     <div class="card">
         <h3>Efectivo esperado</h3>
-        <div class="v">Bs <?= money((float)($caja['monto_inicial'] ?? 0) + (float)($caja['total_efectivo'] ?? 0)) ?></div>
+        <div class="v">Bs <?= money((float)($caja['monto_inicial'] ?? 0) + $efectivo_ventas_actual) ?></div>
         <div class="s">inicial + efectivo</div>
     </div>
 </div>
@@ -107,7 +122,7 @@ $historial = mysqli_query($conexion,
     <form method="POST" action="index.php?p=caja" class="form-inline">
         <div>
             <label>Efectivo contado en el cajón (Bs)</label>
-            <input type="number" step="0.01" name="efectivo_contado" value="<?= money((float)($caja['monto_inicial'] ?? 0) + (float)($caja['total_efectivo'] ?? 0)) ?>" required>
+            <input type="number" step="0.01" name="efectivo_contado" value="<?= money((float)($caja['monto_inicial'] ?? 0) + $efectivo_ventas_actual) ?>" required>
         </div>
         <button type="submit" name="cerrar_caja" class="btn r">Cerrar caja</button>
     </form>
