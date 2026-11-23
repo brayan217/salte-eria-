@@ -4,7 +4,7 @@ $servidor = "localhost";
 $usuario  = "root";
 $psw      = "";
 $baseDatos = "saltena_sin_aceituna";
-$puerto = "3307";
+
 
 $conexion = mysqli_connect($servidor, $usuario, $psw, $baseDatos, $puerto);
 
