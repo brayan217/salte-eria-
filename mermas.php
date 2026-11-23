@@ -141,7 +141,7 @@ $mermas = $conexion->query(
      FROM mermas m
      JOIN tipos_saltena t ON m.id_saltena = t.id_saltena
      WHERE DATE(m.fecha) = CURDATE()
-     ORDER BY m.id_merma DESC"
+     ORDER BY m.id_merma DESC"  
 );
 ?>
 
