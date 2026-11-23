@@ -5,8 +5,7 @@ $usuario  = "root";
 $psw      = "";
 $baseDatos = "saltena_sin_aceituna";
 
-
-$conexion = mysqli_connect($servidor, $usuario, $psw, $baseDatos, $puerto);
+$conexion = mysqli_connect($servidor, $usuario, $psw, $baseDatos);
 
 if (!$conexion) {
     die("Error de conexión: " . mysqli_connect_error());
