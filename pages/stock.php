@@ -19,11 +19,13 @@ if ($_POST && isset($_POST['registrar_merma'])) {
     exit();
 }
 
-// Listar salteñas
+// Listar salteñas usando la vista oficial de stock (horneadas - vendidas - mermas del día)
 $saltenas = mysqli_query($conexion,
-    "SELECT t.id_saltena, t.nombre, t.precio, c.nombre AS categoria
+    "SELECT t.id_saltena, t.nombre, t.precio, c.nombre AS categoria,
+            COALESCE(v.stock_disponible, 0) AS stock_disponible
      FROM tipos_saltena t
      JOIN categorias_saltena c ON c.id_categoria = t.id_categoria
+     LEFT JOIN v_stock_hoy v ON v.id_saltena = t.id_saltena
      WHERE t.estado = 'activo'
      ORDER BY t.nombre");
 
@@ -41,8 +43,11 @@ $mermas = mysqli_query($conexion,
 
 <div class="tiles">
     <?php while ($s = mysqli_fetch_assoc($saltenas)): ?>
-        <div class="tile">
-            <div class="em"></div>
+        <div class="tile <?= (int)$s['stock_disponible'] <= 0 ? 'zero' : '' ?>">
+            <div class="em" style="font-size:26px; font-weight:800; color:<?= (int)$s['stock_disponible'] <= 0 ? 'var(--rojo)' : 'var(--naranja)' ?>;">
+                <?= (int)$s['stock_disponible'] ?>
+            </div>
+            <div class="st" style="font-weight:700;">unidades disponibles</div>
             <div class="nm"><?= h($s['nombre']) ?></div>
             <div class="pr">Bs <?= money($s['precio']) ?></div>
             <div class="st"><?= h($s['categoria']) ?></div>

@@ -27,12 +27,24 @@ $MENU = [
 
 $pagina = $_GET['p'] ?? 'dashboard';
 
+// Páginas accedidas por enlace (no se muestran en el menú de navegación)
+$PAGINAS_EXTRA = [
+    'pedido_editar' => ['Gerente', 'Administrador', 'Cajero', 'Mesero'],
+];
+
 // Si la página solicitada no existe o no tiene permiso, ir al dashboard
-if (!isset($MENU[$pagina]) || !tiene_rol($MENU[$pagina][2])) {
+if (isset($MENU[$pagina])) {
+    if (!tiene_rol($MENU[$pagina][2])) {
+        $pagina = 'dashboard';
+    }
+} elseif (isset($PAGINAS_EXTRA[$pagina])) {
+    if (!tiene_rol($PAGINAS_EXTRA[$pagina])) {
+        $pagina = 'dashboard';
+    }
+} else {
     $pagina = 'dashboard';
 }
 
-$flash = obtener_flash();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -44,9 +56,9 @@ $flash = obtener_flash();
 </head>
 <body>
 
-<?php $fl = obtener_flash(); if ($fl): ?>
+<?php $flash = obtener_flash(); if ($flash): ?>
     <div class="wrap">
-        <div class="alert <?= $fl['t'] ?>"><?= h($fl['m']) ?></div>
+        <div class="alert <?= $flash['t'] ?>"><?= h($flash['m']) ?></div>
     </div>
 <?php endif; ?>
 

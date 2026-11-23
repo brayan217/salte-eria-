@@ -124,6 +124,13 @@ a{
 .btn.r:hover{ filter: brightness(0.92); }
 .btn.g{ background: var(--gris); color: #fff; }
 .btn.g:hover{ filter: brightness(0.92); }
+/* Botones por nombre de color (usados en pedidos, pos, clientes, usuarios) */
+.btn-naranja{ background: var(--naranja); color: #fff; }
+.btn-naranja:hover{ filter: brightness(0.92); }
+.btn-rojo{ background: var(--rojo); color: #fff; }
+.btn-rojo:hover{ filter: brightness(0.92); }
+.btn.o{ background: var(--naranja-dk); color: #fff; }
+.btn.o:hover{ filter: brightness(0.92); }
 .btn.sm{ padding: 5px 12px; font-size: 12px; }
 
 .btn-block{

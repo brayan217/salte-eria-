@@ -46,6 +46,11 @@ if ($_POST && isset($_POST['actualizar_pedido']) && $puede_editar) {
     $cantidad   = (int)($_POST['cantidad'] ?? 0);
     $estado     = mysqli_real_escape_string($conexion, $_POST['estado'] ?? 'pendiente');
 
+    // El mesero NO puede marcar un pedido como pagado: solo el cajero al cobrar.
+    if (!in_array($estado, ['pendiente', 'anulada'], true)) {
+        $estado = 'pendiente';
+    }
+
     if ($id_saltena > 0 && $cantidad > 0) {
         $prod = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT precio FROM tipos_saltena WHERE id_saltena = $id_saltena"));
         if ($prod) {
@@ -108,7 +113,6 @@ $productos = mysqli_query($conexion, "SELECT id_saltena, nombre, precio FROM tip
             <label>Estado</label>
             <select name="estado" required>
                 <option value="pendiente" <?= ($pedido['estado'] === 'pendiente') ? 'selected' : '' ?>>Pendiente</option>
-                <option value="pagada" <?= ($pedido['estado'] === 'pagada') ? 'selected' : '' ?>>Pagada</option>
                 <option value="anulada" <?= ($pedido['estado'] === 'anulada') ? 'selected' : '' ?>>Anulada</option>
             </select>
         </div>
