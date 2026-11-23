@@ -63,14 +63,30 @@ if (isset($_GET['eliminar']) && $rol === 'Administrador') {
     $id = (int)($_GET['eliminar'] ?? 0);
 
     if (!isset($_GET['confirmar']) && $id > 0) {
-        $res = mysqli_query($conexion, "SELECT nombre, usuario FROM usuarios WHERE id_usuario=$id LIMIT 1");
+        $res = mysqli_query($conexion,
+            "SELECT u.id_usuario, u.nombre, u.usuario, r.nombre AS rol
+             FROM usuarios u
+             JOIN roles r ON r.id_rol = u.id_rol
+             WHERE u.id_usuario=$id LIMIT 1");
         $usuario_borrar = mysqli_fetch_assoc($res);
+
+        // Bloquear si es Administrador o el mismo usuario
+        if ($usuario_borrar && ($usuario_borrar['id_usuario'] == $_SESSION['id_usuario'] || $usuario_borrar['rol'] === 'Administrador')) {
+            flash("No se puede eliminar a un Administrador", 'danger');
+            header("Location: index.php?p=usuarios");
+            exit();
+        }
     }
 
     if (isset($_GET['confirmar']) && $id > 0) {
-        // No permitir eliminarse a sí mismo
-        if ($id == $_SESSION['id_usuario']) {
-            flash("No puedes eliminar tu propio usuario", 'danger');
+        $check = mysqli_fetch_assoc(mysqli_query($conexion,
+            "SELECT u.id_usuario, r.nombre AS rol
+             FROM usuarios u
+             JOIN roles r ON r.id_rol = u.id_rol
+             WHERE u.id_usuario=$id LIMIT 1"));
+
+        if (!$check || $id == $_SESSION['id_usuario'] || $check['rol'] === 'Administrador') {
+            flash("No puedes eliminar a un Administrador", 'danger');
         } else {
             mysqli_query($conexion, "DELETE FROM usuarios WHERE id_usuario=$id");
             flash("Usuario eliminado correctamente", 'success');
@@ -111,9 +127,9 @@ if ($rol === 'Administrador') {
 <?php if ($rol === 'Administrador' && isset($usuario_borrar) && !isset($_GET['confirmar'])): ?>
 <div class="panel">
     <div class="hd">⚠ Confirmar eliminación</div>
-    <p>¿Estás seguro de eliminar al usuario <b><?= h($usuario_borrar['nombre'] . ' ' . $usuario_borrar['usuario']) ?></b>?</p>
+    <p>¿Estás seguro de eliminar al usuario <b><?= h($usuario_borrar['nombre'] . ' (' . $usuario_borrar['usuario'] . ')') ?></b>?</p>
     <div style="margin-top:16px">
-        <a href="index.php?p=usuarios&eliminar=<?= $usuario_borrar['id_usuario'] ?? 0 ?>&confirmar=1" class="btn btn-rojo">Sí, eliminar</a>
+        <a href="index.php?p=usuarios&eliminar=<?= $usuario_borrar['id_usuario'] ?>&confirmar=1" class="btn btn-rojo">Sí, eliminar</a>
         <a href="index.php?p=usuarios" class="btn g sm" style="margin-left:10px">Cancelar</a>
     </div>
 </div>
@@ -122,7 +138,7 @@ if ($rol === 'Administrador') {
 <?php if ($rol === 'Administrador'): ?>
 <!-- Administrador: puede registrar, modificar y eliminar -->
 <div class="panel">
-    <div class="hd"> Nuevo usuario</div>
+    <div class="hd"><?= $usuario_editar ? 'Editar usuario' : 'Nuevo usuario' ?></div>
     <form method="POST" action="index.php?p=usuarios" class="form-inline">
         <?php if ($usuario_editar): ?>
             <input type="hidden" name="id" value="<?= $usuario_editar['id_usuario'] ?>">
@@ -144,7 +160,8 @@ if ($rol === 'Administrador') {
         </div>
         <div>
             <label>Contraseña</label>
-            <input type="password" name="password" required
+            <input type="password" name="password"
+                   placeholder="<?= $usuario_editar ? '(sin cambios)' : '' ?>"
                    <?= $usuario_editar ? '' : 'required' ?>>
         </div>
         <div>
@@ -182,11 +199,9 @@ if ($rol === 'Administrador') {
                 <td><span class="pill" style="background:var(--naranja)"><?= h($u['rol']) ?></span></td>
                 <td><?= h($u['estado']) ?></td>
                 <td style="white-space:nowrap">
-                    <?php if ($u['id_usuario'] != $_SESSION['id_usuario']): ?>
-                        <a href="index.php?p=usuarios&editar=<?= $u['id_usuario'] ?>" class="btn btn-naranja sm">Editar</a>
+                    <a href="index.php?p=usuarios&editar=<?= $u['id_usuario'] ?>" class="btn btn-naranja sm">Editar</a>
+                    <?php if ($u['rol'] !== 'Administrador' && $u['id_usuario'] != $_SESSION['id_usuario']): ?>
                         <a href="index.php?p=usuarios&eliminar=<?= $u['id_usuario'] ?>" class="btn btn-rojo sm">Eliminar</a>
-                    <?php else: ?>
-                        <span style="color:#999">—</span>
                     <?php endif; ?>
                 </td>
             </tr>

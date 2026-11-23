@@ -15,14 +15,14 @@ $nombre = $_SESSION['nombre'] ?? '';
 // Menú por rol: [icono, etiqueta, roles_permitidos]
 $MENU = [
     'dashboard' => ['', 'Dashboard', ['Gerente','Administrador','Cajero','Cocinero','Mesero']],
-    'stock'     => ['', 'Stock', ['Gerente','Administrador','Cajero','Cocinero','Mesero']],
-    'horneadas' => ['', 'Horneadas', ['Gerente','Administrador','Cajero','Cocinero']],
+    'stock'     => ['', 'Stock', ['Gerente','Cajero','Cocinero','Mesero']],
+    'horneadas' => ['', 'Horneadas', ['Gerente','Cajero','Cocinero']],
     'pedidos'   => ['', 'Pedidos', ['Gerente','Administrador','Cajero','Mesero']],
-    'pos'       => ['', 'POS / Caja', ['Gerente','Administrador','Cajero']],
-    'caja'      => ['', 'Cierre de Caja', ['Gerente','Administrador','Cajero']],
+    'pos'       => ['', 'POS / Caja', ['Gerente','Cajero']],
+    'caja'      => ['', 'Cierre de Caja', ['Gerente','Cajero']],
     'reportes'  => ['', 'Reportes', ['Gerente','Administrador']],
     'usuarios'  => ['', 'Usuarios', ['Gerente','Administrador']],
-    'clientes'  => ['', 'Clientes', ['Gerente','Administrador','Cajero']],
+    'clientes'  => ['', 'Clientes', ['Gerente','Cajero']],
 ];
 
 $pagina = $_GET['p'] ?? 'dashboard';
@@ -75,17 +75,17 @@ $flash = obtener_flash();
 <div class="wrap">
     <?php
     switch ($pagina):
-        case 'dashboard': include 'pages/dashboard.php'; break;
-        case 'stock':     include 'pages/stock.php'; break;
-        case 'horneadas': include 'pages/horneadas.php'; break;
-        case 'pedidos':   include 'pages/pedidos.php'; break;
-        case 'pos':       include 'pages/pos.php'; break;
-        case 'caja':      include 'pages/caja.php'; break;
-        case 'reportes':  include 'pages/reportes.php'; break;
-        case 'usuarios':  include 'pages/usuarios.php'; break;
-        case 'clientes':  include 'pages/clientes.php'; break;
+        case 'dashboard':     include 'pages/dashboard.php'; break;
+        case 'stock':         include 'pages/stock.php'; break;
+        case 'horneadas':     include 'pages/horneadas.php'; break;
+        case 'pedidos':       include 'pages/pedidos.php'; break;
+        case 'pos':           include 'pages/pos.php'; break;
+        case 'caja':          include 'pages/caja.php'; break;
+        case 'reportes':      include 'pages/reportes.php'; break;
+        case 'usuarios':      include 'pages/usuarios.php'; break;
+        case 'clientes':      include 'pages/clientes.php'; break;
         case 'pedido_editar': include 'pages/pedido_editar.php'; break;
-        default:          include 'pages/dashboard.php'; break;
+        default:              include 'pages/dashboard.php'; break;
     endswitch;
     ?>
 </div>
