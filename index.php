@@ -14,12 +14,13 @@ $nombre = $_SESSION['nombre'] ?? '';
 
 // Menú por rol: [icono, etiqueta, roles_permitidos]
 $MENU = [
-    'dashboard' => ['', 'Dashboard', ['Gerente','Administrador','Cajero','Cocinero','Mesero']],
+    'dashboard' => ['', 'Dashboard', ['Gerente','Administrador','Cocinero','Mesero']],
     'stock'     => ['', 'Stock', ['Gerente','Cajero','Cocinero','Mesero']],
     'horneadas' => ['', 'Horneadas', ['Gerente','Cajero','Cocinero']],
     'pedidos'   => ['', 'Pedidos', ['Gerente','Administrador','Mesero']],
     'pos'       => ['', 'POS / Caja', ['Gerente','Cajero']],
     'caja'      => ['', 'Cierre de Caja', ['Gerente','Cajero']],
+    'historial_turnos' => ['', 'Historial Turnos', ['Gerente','Administrador','Cajero']],
     'reportes'  => ['', 'Reportes', ['Gerente','Administrador']],
     'usuarios'  => ['', 'Usuarios', ['Gerente','Administrador']],
     'clientes'  => ['', 'Clientes', ['Gerente','Cajero']],
@@ -91,6 +92,7 @@ if (isset($MENU[$pagina])) {
         case 'pedidos':       include 'pages/pedidos.php'; break;
         case 'pos':           include 'pages/pos.php'; break;
         case 'caja':          include 'pages/caja.php'; break;
+        case 'historial_turnos': include 'pages/historial_turnos.php'; break;
         case 'reportes':      include 'pages/reportes.php'; break;
         case 'usuarios':      include 'pages/usuarios.php'; break;
         case 'clientes':      include 'pages/clientes.php'; break;
