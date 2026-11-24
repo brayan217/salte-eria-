@@ -12,16 +12,26 @@ $caja = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT id_turno FROM caja_tu
 // Inicializar carrito en sesión
 if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
 
-// Agregar al carrito
+// Agregar al carrito (respetando la cantidad indicada y validando stock)
 if (isset($_GET['action']) && $_GET['action'] === 'add' && $caja) {
     $id_saltena = (int)($_GET['sal'] ?? 0);
+    $cantidad   = (int)($_GET['cantidad'] ?? 1);
+    if ($cantidad < 1) $cantidad = 1;
+
     if ($id_saltena > 0) {
-        $p = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT nombre, precio FROM tipos_saltena WHERE id_saltena = $id_saltena"));
+        $p = mysqli_fetch_assoc(mysqli_query($conexion,
+            "SELECT t.nombre, COALESCE(v.stock_disponible,0) AS stock
+             FROM tipos_saltena t
+             LEFT JOIN v_stock_hoy v ON v.id_saltena = t.id_saltena
+             WHERE t.id_saltena = $id_saltena"));
         if ($p) {
-            if (isset($_SESSION['cart'][$id_saltena])) {
-                $_SESSION['cart'][$id_saltena]++;
+            $ya     = (int)($_SESSION['cart'][$id_saltena] ?? 0);
+            $nueva  = $ya + $cantidad;
+            $stock  = (int)$p['stock'];
+            if ($nueva > $stock) {
+                flash("Stock insuficiente de " . $p['nombre'] . ". Quedan $stock unidad(es).", 'danger');
             } else {
-                $_SESSION['cart'][$id_saltena] = 1;
+                $_SESSION['cart'][$id_saltena] = $nueva;
             }
         }
     }
@@ -40,6 +50,40 @@ if (isset($_GET['action']) && $_GET['action'] === 'remove') {
 // Vaciar carrito
 if (isset($_GET['action']) && $_GET['action'] === 'clear') {
     $_SESSION['cart'] = [];
+    header("Location: index.php?p=pos");
+    exit();
+}
+
+// Cobrar pedido pendiente de mesero
+if (isset($_GET['action']) && $_GET['action'] === 'cobrar_pendiente' && $caja) {
+    $id_venta = (int)($_GET['id'] ?? 0);
+    $metodo   = $_GET['metodo'] ?? 'efectivo';
+
+    if (!in_array($metodo, ['efectivo', 'qr'], true)) {
+        $metodo = 'efectivo';
+    }
+
+    // Validar que el pedido exista y siga pendiente
+    $venta = mysqli_fetch_assoc(mysqli_query($conexion,
+        "SELECT id_venta, total FROM ventas WHERE id_venta = $id_venta AND estado = 'pendiente' LIMIT 1"));
+
+    if ($venta) {
+        $total = (float)$venta['total'];
+
+        // Marcar como pagada y guardar el método de pago (aquí se descuenta el stock
+        // porque la vista de stock resta las ventas en estado 'pagada')
+        mysqli_query($conexion,
+            "UPDATE ventas SET estado = 'pagada' WHERE id_venta = $id_venta");
+
+        // Registrar el pago para que aparezca en el corte de caja
+        mysqli_query($conexion,
+            "INSERT INTO ventas_pagos (id_venta, metodo, monto) VALUES ($id_venta, '$metodo', $total)");
+
+        flash("Pedido #$id_venta cobrado ($metodo) — Bs " . money($total) . ". El stock ya se había descontado al tomar el pedido.", 'success');
+    } else {
+        flash("No se encontró el pedido o ya fue cobrado", 'danger');
+    }
+
     header("Location: index.php?p=pos");
     exit();
 }
@@ -65,8 +109,8 @@ if ($_POST && isset($_POST['cobrar'])) {
             flash("El pago no cuadra con el total (Bs " . money($total) . ")", 'danger');
         } else {
             // Registrar venta con el USUARIO LOGUEADO automáticamente
-            mysqli_query($conexion, "INSERT INTO ventas (id_turno, id_usuario, id_cliente, fecha, total, metodo, estado) 
-                VALUES (" . $caja['id_turno'] . ", $id_usuario, NULL, NOW(), $total, '$metodo', 'pagada')");
+            mysqli_query($conexion, "INSERT INTO ventas (id_turno, id_usuario, id_cliente, fecha, total, estado) 
+                VALUES (" . $caja['id_turno'] . ", $id_usuario, NULL, NOW(), $total, 'pagada')");
             $id_venta = mysqli_insert_id($conexion);
 
             foreach ($_SESSION['cart'] as $id_saltena => $cantidad) {
@@ -180,13 +224,18 @@ $pendientes = mysqli_query($conexion,
                 <select name="sal" required>
                     <option value="">Seleccione un producto</option>
                     <?php
-                    $menu = mysqli_query($conexion, "SELECT id_saltena, nombre, precio FROM tipos_saltena WHERE estado = 'activo' ORDER BY nombre");
+                    $menu = mysqli_query($conexion,
+                        "SELECT t.id_saltena, t.nombre, t.precio, COALESCE(v.stock_disponible,0) AS stock
+                         FROM tipos_saltena t
+                         LEFT JOIN v_stock_hoy v ON v.id_saltena = t.id_saltena
+                         WHERE t.estado = 'activo'
+                         ORDER BY t.nombre");
                     while ($m = mysqli_fetch_assoc($menu)):
-                        $en_carrito = $_SESSION['cart'][$m['id_saltena']] ?? 0;
-                        $clase = (!$caja) ? 'disabled' : '';
+                        $stock_actual = (int)$m['stock'];
+                        $clase = (!$caja || $stock_actual <= 0) ? 'disabled' : '';
                     ?>
                         <option value="<?= $m['id_saltena'] ?>" <?= $clase ?>>
-                            <?= h($m['nombre']) ?> - Bs <?= money($m['precio']) ?>
+                            <?= h($m['nombre']) ?> - Bs <?= money($m['precio']) ?> (Quedan: <?= $stock_actual ?>)
                         </option>
                     <?php endwhile; ?>
                 </select>
@@ -248,12 +297,13 @@ $pendientes = mysqli_query($conexion,
                 </div>
 
                 <div>
-                    <label>Método de pago</label>
-                    <select name="metodo_pago" id="metodo_pago">
-                        <option value="efectivo">Efectivo</option>
-                        <option value="qr">QR</option>
-                        <option value="mixto">Mixto</option>
-                    </select>
+                    <label>Efectivo (Bs)</label>
+                    <input type="number" name="efectivo" step="0.01" min="0" value="<?= number_format($total_carrito, 2) ?>">
+                </div>
+
+                <div>
+                    <label>QR (Bs)</label>
+                    <input type="number" name="qr" step="0.01" min="0" value="0">
                 </div>
             </div>
 

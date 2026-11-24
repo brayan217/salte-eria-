@@ -2,7 +2,7 @@
 // Conexión a la base de datos MySQL
 $servidor = "localhost";
 $usuario  = "root";
-$psw      = "";
+$psw      = "12345";
 $baseDatos = "saltena_sin_aceituna";
 
 $conexion = mysqli_connect($servidor, $usuario, $psw, $baseDatos);

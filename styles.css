@@ -124,6 +124,13 @@ a{
 .btn.r:hover{ filter: brightness(0.92); }
 .btn.g{ background: var(--gris); color: #fff; }
 .btn.g:hover{ filter: brightness(0.92); }
+/* Botones por nombre de color (usados en pedidos, pos, clientes, usuarios) */
+.btn-naranja{ background: var(--naranja); color: #fff; }
+.btn-naranja:hover{ filter: brightness(0.92); }
+.btn-rojo{ background: var(--rojo); color: #fff; }
+.btn-rojo:hover{ filter: brightness(0.92); }
+.btn.o{ background: var(--naranja-dk); color: #fff; }
+.btn.o:hover{ filter: brightness(0.92); }
 .btn.sm{ padding: 5px 12px; font-size: 12px; }
 
 .btn-block{
@@ -144,6 +151,13 @@ a{
 .alert.danger{ background: #FFEBEE; color: #B71C1C; border-left: 4px solid var(--rojo); }
 .alert.warning{ background: #FFF3E0; color: #E65100; border-left: 4px solid var(--naranja); }
 .alert.info{ background: #E3F2FD; color: #0D47A1; border-left: 4px solid #1976D2; }
+
+/* Mensaje flash flotando al lado del título de cada página (no mueve el navbar) */
+.flash-inline{
+  float: right;
+  margin-bottom: 0;
+  max-width: 55%;
+}
 
 /* ===== NAVEGACIÓN ===== */
 .nav{
@@ -344,16 +358,71 @@ input:focus, select:focus{
   margin-bottom: 4px;
 }
 
+/* Formularios en línea (Caja, Stock, Horneadas, Pedidos, Usuarios, Clientes...) */
 .form-inline{
   display: flex;
-  gap: 10px;
+  gap: 22px 16px;
   flex-wrap: wrap;
-  align-items: end;
+  align-items: flex-end;
+}
+
+/* Los formularios dentro de un panel (Abrir caja, Horneadas, Mermas...)
+   necesitan separación de los bordes y del encabezado */
+.panel > .form-inline{
+  padding: 22px 18px 24px;
+  background: #fff;
 }
 
 .form-inline > div{
   flex: 1;
-  min-width: 150px;
+  min-width: 170px;
+}
+
+.form-inline > div > label,
+.campos > div > label{
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gris);
+  margin-bottom: 8px;
+}
+
+.form-inline > button{
+  margin-bottom: 0;
+}
+
+/* POS: selector de productos + cantidad + botón */
+.productos-form{
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.productos-form > select{ flex: 2 1 240px; }
+.productos-form > input{ flex: 0 0 130px; width: auto; }
+.productos-form > button{ flex: 0 0 auto; }
+
+/* POS: datos de la venta y botones de acción */
+.campos{
+  display: flex;
+  gap: 18px 14px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.campos > div{
+  flex: 1;
+  min-width: 170px;
+}
+.acciones-form{
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.nota{
+  font-size: 12px;
+  color: #888;
+  margin-top: 12px;
 }
 
 /* ===== TILES (productos) ===== */

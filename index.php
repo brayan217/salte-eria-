@@ -14,12 +14,13 @@ $nombre = $_SESSION['nombre'] ?? '';
 
 // Menú por rol: [icono, etiqueta, roles_permitidos]
 $MENU = [
-    'dashboard' => ['', 'Dashboard', ['Gerente','Administrador','Cajero','Cocinero','Mesero']],
+    'dashboard' => ['', 'Dashboard', ['Gerente','Administrador','Cocinero','Mesero']],
     'stock'     => ['', 'Stock', ['Gerente','Cajero','Cocinero','Mesero']],
     'horneadas' => ['', 'Horneadas', ['Gerente','Cajero','Cocinero']],
-    'pedidos'   => ['', 'Pedidos', ['Gerente','Administrador','Cajero','Mesero']],
+    'pedidos'   => ['', 'Pedidos', ['Gerente','Administrador','Mesero']],
     'pos'       => ['', 'POS / Caja', ['Gerente','Cajero']],
     'caja'      => ['', 'Cierre de Caja', ['Gerente','Cajero']],
+    'historial_turnos' => ['', 'Historial Turnos', ['Gerente','Administrador','Cajero']],
     'reportes'  => ['', 'Reportes', ['Gerente','Administrador']],
     'usuarios'  => ['', 'Usuarios', ['Gerente','Administrador']],
     'clientes'  => ['', 'Clientes', ['Gerente','Cajero']],
@@ -27,12 +28,24 @@ $MENU = [
 
 $pagina = $_GET['p'] ?? 'dashboard';
 
+// Páginas accedidas por enlace (no se muestran en el menú de navegación)
+$PAGINAS_EXTRA = [
+    'pedido_editar' => ['Gerente', 'Administrador', 'Cajero', 'Mesero'],
+];
+
 // Si la página solicitada no existe o no tiene permiso, ir al dashboard
-if (!isset($MENU[$pagina]) || !tiene_rol($MENU[$pagina][2])) {
+if (isset($MENU[$pagina])) {
+    if (!tiene_rol($MENU[$pagina][2])) {
+        $pagina = 'dashboard';
+    }
+} elseif (isset($PAGINAS_EXTRA[$pagina])) {
+    if (!tiene_rol($PAGINAS_EXTRA[$pagina])) {
+        $pagina = 'dashboard';
+    }
+} else {
     $pagina = 'dashboard';
 }
 
-$flash = obtener_flash();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -43,12 +56,6 @@ $flash = obtener_flash();
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-<?php $fl = obtener_flash(); if ($fl): ?>
-    <div class="wrap">
-        <div class="alert <?= $fl['t'] ?>"><?= h($fl['m']) ?></div>
-    </div>
-<?php endif; ?>
 
 <!-- BARRA DE NAVEGACIÓN -->
 <nav class="nav">
@@ -73,6 +80,10 @@ $flash = obtener_flash();
 
 <!-- CONTENIDO -->
 <div class="wrap">
+    <!-- Mensaje flash flotando al lado del título de la página (no empuja el navbar) -->
+    <?php $flash = obtener_flash(); if ($flash): ?>
+        <div class="alert <?= $flash['t'] ?> flash-inline"><?= h($flash['m']) ?></div>
+    <?php endif; ?>
     <?php
     switch ($pagina):
         case 'dashboard':     include 'pages/dashboard.php'; break;
@@ -81,6 +92,7 @@ $flash = obtener_flash();
         case 'pedidos':       include 'pages/pedidos.php'; break;
         case 'pos':           include 'pages/pos.php'; break;
         case 'caja':          include 'pages/caja.php'; break;
+        case 'historial_turnos': include 'pages/historial_turnos.php'; break;
         case 'reportes':      include 'pages/reportes.php'; break;
         case 'usuarios':      include 'pages/usuarios.php'; break;
         case 'clientes':      include 'pages/clientes.php'; break;

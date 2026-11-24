@@ -18,14 +18,22 @@ if ($_POST && isset($_POST['registrar_pedido']) && $rol !== 'Administrador') {
         $mesa       = mysqli_real_escape_string($conexion, $_POST['mesa'] ?? '');
 
         if ($id_saltena > 0 && $cantidad > 0 && $mesa !== '') {
-            $prod = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT precio FROM tipos_saltena WHERE id_saltena = $id_saltena"));
+            $prod = mysqli_fetch_assoc(mysqli_query($conexion,
+                "SELECT t.precio, COALESCE(v.stock_disponible,0) AS stock
+                 FROM tipos_saltena t
+                 LEFT JOIN v_stock_hoy v ON v.id_saltena = t.id_saltena
+                 WHERE t.id_saltena = $id_saltena"));
             if ($prod) {
-                $total = (float)$prod['precio'] * (float)$cantidad;
-                // Guardar con el id_turno de la caja abierta
-                mysqli_query($conexion, "INSERT INTO ventas (id_turno, id_usuario, id_cliente, fecha, total, estado) VALUES (" . $caja['id_turno'] . ", $id_usuario, NULL, NOW(), $total, 'pendiente')");
-                $id_venta = mysqli_insert_id($conexion);
-                mysqli_query($conexion, "INSERT INTO detalle_ventas (id_venta, id_saltena, cantidad, precio_unitario, subtotal) VALUES ($id_venta, $id_saltena, $cantidad, " . (float)$prod['precio'] . ", $total)");
-                flash("Pedido enviado a caja ✔", 'success');
+                if ($cantidad > (int)$prod['stock']) {
+                    flash("Stock insuficiente. Quedan " . (int)$prod['stock'] . " unidad(es).", 'danger');
+                } else {
+                    $total = (float)$prod['precio'] * (float)$cantidad;
+                    // Guardar con el id_turno de la caja abierta
+                    mysqli_query($conexion, "INSERT INTO ventas (id_turno, id_usuario, id_cliente, fecha, total, estado) VALUES (" . $caja['id_turno'] . ", $id_usuario, NULL, NOW(), $total, 'pendiente')");
+                    $id_venta = mysqli_insert_id($conexion);
+                    mysqli_query($conexion, "INSERT INTO detalle_ventas (id_venta, id_saltena, cantidad, precio_unitario, subtotal) VALUES ($id_venta, $id_saltena, $cantidad, " . (float)$prod['precio'] . ", $total)");
+                    flash("Pedido enviado a caja ✔", 'success');
+                }
             }
         } else {
             flash("Datos inválidos", 'danger');
@@ -35,12 +43,19 @@ if ($_POST && isset($_POST['registrar_pedido']) && $rol !== 'Administrador') {
     exit();
 }
 
-// Productos disponibles
-$productos = mysqli_query($conexion, "SELECT id_saltena, nombre, precio FROM tipos_saltena WHERE estado = 'activo' ORDER BY nombre");
+// Productos disponibles con stock actual (de la vista oficial v_stock_hoy)
+$productos = mysqli_query($conexion,
+    "SELECT t.id_saltena, t.nombre, t.precio, COALESCE(v.stock_disponible,0) AS stock
+     FROM tipos_saltena t
+     LEFT JOIN v_stock_hoy v ON v.id_saltena = t.id_saltena
+     WHERE t.estado = 'activo'
+     ORDER BY t.nombre");
 
-// Consultas según el rol
+// Consultas según el rol:
+// - Administrador: ve el listado de pedidos enviados por los meseros
+// - Mesero: ve TODOS los suyos (para ver deshabilitados los ya cobrados)
+// - Cajero/Gerente: solo ven los pendientes de cobrar
 if ($rol === 'Administrador') {
-    // El Administrador ve solo el listado de pedidos que los meseros mandaron a caja
     $pendientes = mysqli_query($conexion,
         "SELECT v.id_venta, v.fecha, v.total, v.estado, t.nombre AS saltena, d.cantidad, u.nombre AS mesero
          FROM ventas v
@@ -52,16 +67,16 @@ if ($rol === 'Administrador') {
          ORDER BY v.fecha DESC");
 } elseif ($rol === 'Mesero') {
     $pendientes = mysqli_query($conexion,
-        "SELECT v.id_venta, v.fecha, v.total, t.nombre AS saltena, d.cantidad, u.nombre AS mesero
+        "SELECT v.id_venta, v.fecha, v.total, v.estado, t.nombre AS saltena, d.cantidad, u.nombre AS mesero
          FROM ventas v
          JOIN detalle_ventas d ON d.id_venta = v.id_venta
          JOIN tipos_saltena t ON t.id_saltena = d.id_saltena
          JOIN usuarios u ON u.id_usuario = v.id_usuario
-         WHERE v.estado = 'pendiente' AND v.id_usuario = $id_usuario
+         WHERE v.id_usuario = $id_usuario
          ORDER BY v.fecha DESC");
 } else {
     $pendientes = mysqli_query($conexion,
-        "SELECT v.id_venta, v.fecha, v.total, t.nombre AS saltena, d.cantidad, u.nombre AS mesero
+        "SELECT v.id_venta, v.fecha, v.total, v.estado, t.nombre AS saltena, d.cantidad, u.nombre AS mesero
          FROM ventas v
          JOIN detalle_ventas d ON d.id_venta = v.id_venta
          JOIN tipos_saltena t ON t.id_saltena = d.id_saltena
@@ -87,14 +102,19 @@ if ($rol === 'Administrador') {
                 <th>Fecha y Hora</th>
             </tr>
             <?php while ($pd = mysqli_fetch_assoc($pendientes)): ?>
+                <?php
+                $estado_pd    = $pd['estado'];
+                $color_estado = $estado_pd === 'pagada' ? 'var(--oliva)'
+                              : ($estado_pd === 'anulada' ? 'var(--rojo)' : 'var(--naranja)');
+                ?>
                 <tr>
                     <td><?= $pd['id_venta'] ?></td>
                     <td><b><?= h($pd['mesero']) ?></b></td>
                     <td><?= h($pd['saltena']) ?> × <?= (int)$pd['cantidad'] ?></td>
                     <td><b>Bs <?= money($pd['total']) ?></b></td>
                     <td>
-                        <span class="pill" style="background:<?= $pd['estado'] === 'pagada' ? 'var(--oliva)' : 'var(--naranja)' ?>">
-                            <?= h($pd['estado']) ?>
+                        <span class="pill" style="background:<?= $color_estado ?>">
+                            <?= h($estado_pd) ?>
                         </span>
                     </td>
                     <td><?= date('d/m/Y H:i', strtotime($pd['fecha'])) ?></td>
@@ -123,7 +143,8 @@ if ($rol === 'Administrador') {
         <?php endif; ?>
     </div>
 
-    <div class="split">
+    <!-- Para el mesero se apilan verticalmente (Nuevo pedido arriba, Mis pedidos abajo) -->
+    <div class="<?= $rol === 'Mesero' ? '' : 'split' ?>">
         <div class="panel">
             <div class="hd">Nuevo pedido</div>
             <form method="POST" action="index.php?p=pedidos" class="form-inline">
@@ -132,7 +153,9 @@ if ($rol === 'Administrador') {
                     <select name="id_saltena" required <?= !$caja ? 'disabled' : '' ?>>
                         <option value="">Seleccione</option>
                         <?php while ($p = mysqli_fetch_assoc($productos)): ?>
-                            <option value="<?= $p['id_saltena'] ?>"><?= h($p['nombre']) ?> - Bs <?= money($p['precio']) ?></option>
+                            <option value="<?= $p['id_saltena'] ?>" <?= (int)$p['stock'] <= 0 ? 'disabled' : '' ?>>
+                                <?= h($p['nombre']) ?> - Bs <?= money($p['precio']) ?> (Quedan: <?= (int)$p['stock'] ?>)
+                            </option>
                         <?php endwhile; ?>
                     </select>
                 </div>
@@ -163,22 +186,37 @@ if ($rol === 'Administrador') {
                     <th>Salteña × Cant</th>
                     <th>Total</th>
                     <th>Hora</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
                 <?php while ($pd = mysqli_fetch_assoc($pendientes)): ?>
+                    <?php
+                    $estado_pd    = $pd['estado'];
+                    $color_estado = $estado_pd === 'pagada' ? 'var(--oliva)'
+                                  : ($estado_pd === 'anulada' ? 'var(--rojo)' : 'var(--naranja)');
+                    $bloqueado    = ($estado_pd !== 'pendiente'); // ya cobrado o anulado
+                    ?>
                     <tr>
                         <td><?= $pd['id_venta'] ?></td>
-                        <td><?= h($pd['mesero']) ?></td>
+                        <td><b><?= h($pd['mesero']) ?></b></td>
                         <td><?= h($pd['saltena']) ?> × <?= (int)$pd['cantidad'] ?></td>
                         <td><b>Bs <?= money($pd['total']) ?></b></td>
                         <td><?= date('H:i', strtotime($pd['fecha'])) ?></td>
+                        <td><span class="pill" style="background:<?= $color_estado ?>"><?= h($estado_pd) ?></span></td>
                         <td style="white-space:nowrap">
                             <?php if ($rol === 'Mesero'): ?>
-                                <a href="index.php?p=pedido_editar&id=<?= $pd['id_venta'] ?>" class="btn btn-naranja sm">Editar</a>
-                                <a href="index.php?p=pedido_editar&id=<?= $pd['id_venta'] ?>&anular=1" class="btn btn-rojo sm">Anular</a>
-                            <?php else: ?>
+                                <?php if ($bloqueado): ?>
+                                    <span class="btn g sm" style="opacity:0.45;cursor:not-allowed" title="El pedido ya fue cobrado o anulado">Editar</span>
+                                    <span class="btn g sm" style="opacity:0.45;cursor:not-allowed" title="El pedido ya fue cobrado o anulado">Anular</span>
+                                <?php else: ?>
+                                    <a href="index.php?p=pedido_editar&id=<?= $pd['id_venta'] ?>" class="btn btn-naranja sm">Editar</a>
+                                    <a href="index.php?p=pedido_editar&id=<?= $pd['id_venta'] ?>&anular=1" class="btn btn-rojo sm">Anular</a>
+                                <?php endif; ?>
+                            <?php elseif (!$bloqueado): ?>
                                 <a href="index.php?p=pos&action=cobrar_pendiente&id=<?= $pd['id_venta'] ?>&metodo=efectivo" class="btn btn-naranja sm">Efectivo</a>
                                 <a href="index.php?p=pos&action=cobrar_pendiente&id=<?= $pd['id_venta'] ?>&metodo=qr" class="btn btn-naranja sm">QR</a>
+                            <?php else: ?>
+                                <span style="color:#999">—</span>
                             <?php endif; ?>
                         </td>
                     </tr>
