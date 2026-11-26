@@ -14,12 +14,13 @@ $nombre = $_SESSION['nombre'] ?? '';
 
 // Menú por rol: [icono, etiqueta, roles_permitidos]
 $MENU = [
-    'dashboard' => ['', 'Dashboard', ['Gerente','Administrador','Cajero','Cocinero','Mesero']],
+    'dashboard' => ['', 'Dashboard', ['Gerente', 'Administrador', 'Cocinero', 'Mesero']],
     'stock'     => ['', 'Stock', ['Gerente','Cajero','Cocinero','Mesero']],
     'horneadas' => ['', 'Horneadas', ['Gerente','Cajero','Cocinero']],
     'pedidos'   => ['', 'Pedidos', ['Gerente','Administrador','Mesero']],
     'pos'       => ['', 'POS / Caja', ['Gerente','Cajero']],
     'caja'      => ['', 'Cierre de Caja', ['Gerente','Cajero']],
+    'historial_turnos' => ['', 'Historial Turnos', ['Gerente','Administrador','Cajero']],
     'reportes'  => ['', 'Reportes', ['Gerente','Administrador']],
     'usuarios'  => ['', 'Usuarios', ['Gerente','Administrador']],
     'clientes'  => ['', 'Clientes', ['Gerente','Cajero']],
@@ -48,59 +49,88 @@ if (isset($MENU[$pagina])) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>El Sin Aceituna - <?= h($pagina) ?></title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
-<!-- BARRA DE NAVEGACIÓN -->
-<nav class="nav">
-    <div class="brand">
-        <span class="dot"></span> EL SIN ACEITUNA
-    </div>
-    <div class="menu">
-        <?php foreach ($MENU as $clave => $datos): [$icono, $etiqueta, $roles] = $datos; ?>
-            <?php if (tiene_rol($roles)): ?>
-                <a href="index.php?p=<?= h($clave) ?>" class="<?= $pagina === $clave ? 'on' : '' ?>">
-                    <?= h($icono) ?> <?= h($etiqueta) ?>
-                </a>
-            <?php endif; ?>
-        <?php endforeach; ?>
-    </div>
-    <div class="userbox">
-        <span class="badge"><?= h($rol) ?></span>
-        <span><?= h($nombre) ?></span>
-        <a href="logout.php" class="btn r sm">Salir</a>
-    </div>
-</nav>
+    <!-- BARRA DE NAVEGACIÓN -->
+    <nav class="nav">
+        <div class="brand">
+            <span class="dot"><img src="logoa.png" alt="El Sin Aceituna"></span> EL SIN ACEITUNA
+        </div>
+        <div class="menu">
+            <?php foreach ($MENU as $clave => $datos): [$icono, $etiqueta, $roles] = $datos; ?>
+                <?php if (tiene_rol($roles)): ?>
+                    <a href="index.php?p=<?= h($clave) ?>" class="<?= $pagina === $clave ? 'on' : '' ?>">
+                        <?= h($icono) ?> <?= h($etiqueta) ?>
+                    </a>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+        <div class="userbox">
+            <span class="badge"><?= h($rol) ?></span>
+            <span><?= h($nombre) ?></span>
+            <a href="logout.php" class="btn r sm">Salir</a>
+        </div>
+    </nav>
 
-<!-- CONTENIDO -->
-<div class="wrap">
-    <!-- Mensaje flash flotando al lado del título de la página (no empuja el navbar) -->
-    <?php $flash = obtener_flash(); if ($flash): ?>
-        <div class="alert <?= $flash['t'] ?> flash-inline"><?= h($flash['m']) ?></div>
-    <?php endif; ?>
-    <?php
-    switch ($pagina):
-        case 'dashboard':     include 'pages/dashboard.php'; break;
-        case 'stock':         include 'pages/stock.php'; break;
-        case 'horneadas':     include 'pages/horneadas.php'; break;
-        case 'pedidos':       include 'pages/pedidos.php'; break;
-        case 'pos':           include 'pages/pos.php'; break;
-        case 'caja':          include 'pages/caja.php'; break;
-        case 'reportes':      include 'pages/reportes.php'; break;
-        case 'usuarios':      include 'pages/usuarios.php'; break;
-        case 'clientes':      include 'pages/clientes.php'; break;
-        case 'pedido_editar': include 'pages/pedido_editar.php'; break;
-        default:              include 'pages/dashboard.php'; break;
-    endswitch;
-    ?>
-</div>
+    <!-- CONTENIDO -->
+    <div class="wrap">
+        <!-- Mensaje flash flotando al lado del título de la página (no empuja el navbar) -->
+        <?php $flash = obtener_flash();
+        if ($flash): ?>
+            <div class="alert <?= $flash['t'] ?> flash-inline"><?= h($flash['m']) ?></div>
+        <?php endif; ?>
+        <?php
+        switch ($pagina):
+            case 'dashboard':
+                include 'pages/dashboard.php';
+                break;
+            case 'stock':
+                include 'pages/stock.php';
+                break;
+            case 'horneadas':
+                include 'pages/horneadas.php';
+                break;
+            case 'pedidos':
+                include 'pages/pedidos.php';
+                break;
+            case 'pos':
+                include 'pages/pos.php';
+                break;
+            case 'caja':
+                include 'pages/caja.php';
+                break;
+            case 'historial_turnos':
+                include 'pages/historial_turnos.php';
+                break;
+            case 'reportes':
+                include 'pages/reportes.php';
+                break;
+            case 'usuarios':
+                include 'pages/usuarios.php';
+                break;
+            case 'clientes':
+                include 'pages/clientes.php';
+                break;
+            case 'pedido_editar':
+                include 'pages/pedido_editar.php';
+                break;
+            default:
+                include 'pages/dashboard.php';
+                break;
+        endswitch;
+        ?>
+    </div>
 
-<footer>© 2026 Salteñería "El Sin Aceituna" · Sistema de Ventas · <a href="logout.php">Cerrar sesión</a></footer>
+    <footer>© 2026 Salteñería "El Sin Aceituna" · Sistema de Ventas · <a href="logout.php">Cerrar sesión</a></footer>
 
 </body>
+
 </html>

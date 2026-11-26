@@ -1,5 +1,4 @@
 <?php
-// Funciones simples y reutilizables para el proyecto
 
 // Escapar texto para mostrar en HTML (evita XSS básico)
 function h($texto) {

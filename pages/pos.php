@@ -175,7 +175,7 @@ $pendientes = mysqli_query($conexion,
     <h1> Punto de venta - Mostrador</h1>
 
     <?php if (!$caja): ?>
-        <div class="alerta danger">⚠ No hay caja abierta. Abra la caja antes de vender.</div>
+        <div class="alerta danger">No hay caja abierta. Abra la caja antes de vender.</div>
     <?php endif; ?>
 
     <!-- Mensajes flash -->

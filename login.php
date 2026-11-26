@@ -52,39 +52,43 @@ if ($_POST) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login - El Sin Aceituna</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
-<div class="login-wrap">
-    <div class="login-box">
-        <div class="logo"></div>
-        <h1>EL SIN ACEITUNA</h1>
-        <div class="sub">Salteñería · Sistema de Ventas</div>
+    <div class="login-wrap">
+        <div class="login-box">
+            <div class="logo"><img src="logoa.png" alt="El Sin Aceituna"></div>
+            <h1>EL SIN ACEITUNA</h1>
+            <div class="sub">Salteñería · Sistema de Ventas</div>
 
-        <?php if ($error): ?>
-            <div class="alert danger"><?= h($error) ?></div>
-        <?php endif; ?>
+            <?php if ($error): ?>
+                <div class="alert danger"><?= h($error) ?></div>
+            <?php endif; ?>
 
-        <?php $fl = obtener_flash(); if ($fl): ?>
-            <div class="alert <?= $fl['t'] ?>"><?= h($fl['m']) ?></div>
-        <?php endif; ?>
+            <?php $fl = obtener_flash();
+            if ($fl): ?>
+                <div class="alert <?= $fl['t'] ?>"><?= h($fl['m']) ?></div>
+            <?php endif; ?>
 
-        <form method="POST" action="login.php">
-            <label>Usuario</label>
-            <input type="text" name="usuario" required autofocus>
+            <form method="POST" action="login.php">
+                <label>Usuario</label>
+                <input type="text" name="usuario" required autofocus>
 
-            <label>Contraseña</label>
-            <input type="password" name="password" required>
+                <label>Contraseña</label>
+                <input type="password" name="password" required>
 
-            <button type="submit" class="btn p btn-block">Ingresar →</button>
-        </form>
+                <button type="submit" class="btn p btn-block">Ingresar →</button>
+            </form>
+        </div>
     </div>
-</div>
 
 </body>
+
 </html>
